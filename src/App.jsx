@@ -1,12 +1,21 @@
 // src/App.js
 import { useState } from "react";
 import "./index.css";
+import "./App.css";
+
+// importing components
 import LandingPage from "./components/LandingPage";
+import HomeScreen from "./components/HomeScreen";
+import InOutScreen from "./components/InOutScreen";
+import NotificationsScreen from "./components/NotificationsScreen";
+import BottomNav from "./components/BottomNav";
+import AddTransactionSheet from "./components/AddTransactionSheet";
 import { transactions as seedTx } from "../data/mockData";
 
 export default function App() {
   const [screen, setScreen] = useState("landing"); // landing | app
   const [activeTab, setActiveTab] = useState("home");
+  const [showAdd, setShowAdd] = useState(false);
   const [txList, setTxList] = useState(seedTx);
 
   const handleSave = (tx) => {
@@ -52,9 +61,9 @@ export default function App() {
   const renderTab = () => {
     switch (activeTab) {
       case "analytics":
-        return "Analytics coming soon!";
+        return <InOutScreen txList={txList} />;
       case "wallet":
-        return "Wallet details coming soon!";
+        return <NotificationsScreen />;
       case "profile":
         return (
           <div
@@ -94,11 +103,32 @@ export default function App() {
             </p>
           </div>
         );
-
-
-
       default:
         return <HomeScreen txList={txList} />;
     }
   };
+
+  return (
+    <div
+      style={{
+        maxWidth: 480,
+        margin: "0 auto",
+        position: "relative",
+        minHeight: "100vh",
+      }}
+    >
+      {renderTab()}
+      <BottomNav
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
+        onAdd={() => setShowAdd(true)}
+      />
+      {showAdd && (
+        <AddTransactionSheet
+          onClose={() => setShowAdd(false)}
+          onSave={handleSave}
+        />
+      )}
+    </div>
+  );
 }
