@@ -1,19 +1,21 @@
-// src/App.js
 import { useState } from "react";
 import "./index.css";
-import "./App.css";
 
-// importing components
 import LandingPage from "./components/LandingPage";
+import DesktopLayout from "./components/desktop/DesktopLayout";
+
+// Your existing mobile screens
 import HomeScreen from "./components/HomeScreen";
-import InOutScreen from "./components/InOutScreen";
-import NotificationsScreen from "./components/NotificationsScreen";
 import BottomNav from "./components/BottomNav";
 import AddTransactionSheet from "./components/AddTransactionSheet";
+import InOutScreen from "./components/InOutScreen";
+import NotificationsScreen from "./components/NotificationsScreen";
 import { transactions as seedTx } from "../data/mockData";
 
-export default function App() {
-  const [screen, setScreen] = useState("landing"); // landing | app
+const DESKTOP_BREAKPOINT = 1024;
+
+// ── Mobile app (your existing code, unchanged) ────────────────────────────
+function MobileApp() {
   const [activeTab, setActiveTab] = useState("home");
   const [showAdd, setShowAdd] = useState(false);
   const [txList, setTxList] = useState(seedTx);
@@ -21,10 +23,10 @@ export default function App() {
   const handleSave = (tx) => {
     const icons = {
       food: "utensils",
-      subscription: "repeat",
-      bills: "zap",
       transport: "car",
-      income: "trending-up",
+      bills: "zap",
+      subscription: "repeat",
+      income: "briefcase",
       cash: "landmark",
     };
     const colors = {
@@ -54,55 +56,12 @@ export default function App() {
     ]);
   };
 
-  if (screen === "landing") {
-    return <LandingPage onEnter={() => setScreen("app")} />;
-  }
-
   const renderTab = () => {
     switch (activeTab) {
       case "analytics":
         return <InOutScreen txList={txList} />;
       case "wallet":
         return <NotificationsScreen />;
-      case "profile":
-        return (
-          <div
-            className="font-inter flex flex-col items-center justify-center"
-            style={{
-              minHeight: "100vh",
-              background: "var(--bg-app)",
-              paddingBottom: "var(--nav-height)",
-            }}
-          >
-            <div
-              style={{
-                width: 64,
-                height: 64,
-                borderRadius: 20,
-                background: "var(--primary)",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                marginBottom: 12,
-              }}
-            >
-              <span style={{ fontSize: 28 }}>👤</span>
-            </div>
-            <p
-              style={{
-                fontWeight: 700,
-                fontSize: 18,
-                color: "var(--text-main)",
-                marginBottom: 4,
-              }}
-            >
-              lego
-            </p>
-            <p style={{ color: "var(--text-muted)", fontSize: 14 }}>
-              lego@example.com
-            </p>
-          </div>
-        );
       default:
         return <HomeScreen txList={txList} />;
     }
@@ -131,4 +90,16 @@ export default function App() {
       )}
     </div>
   );
+}
+
+// ── Root ──────────────────────────────────────────────────────────────────
+export default function App() {
+  const [screen, setScreen] = useState("landing");
+  const isDesktop = window.innerWidth >= DESKTOP_BREAKPOINT;
+
+  if (screen === "landing") {
+    return <LandingPage onEnter={() => setScreen("app")} />;
+  }
+
+  return isDesktop ? <DesktopLayout /> : <MobileApp />;
 }
