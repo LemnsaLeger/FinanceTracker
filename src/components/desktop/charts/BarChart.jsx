@@ -1,18 +1,48 @@
 // src/components/desktop/charts/BarChart.jsx
-// SVG-free bar chart built with CSS — no charting library needed.
-// Receives data as a prop so it can be used on both Dashboard and Analytics pages.
+// CSS bar chart — no charting library needed.
+// Always receives `data` as a prop from DashboardPage or AnalyticsPage.
+// data shape: [{ month: "Mar", income: 3850000, expense: 1420000 }, ...]
 
-import { MONTHLY_DATA } from "../../../../data/desktopData";
+export default function BarChart({ data = [] }) {
+  if (!data || data.length === 0) {
+    return (
+      <div
+        style={{
+          height: 120,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          color: "#bdbdbd",
+          fontSize: 13,
+        }}
+      >
+        No data yet
+      </div>
+    );
+  }
 
-export default function BarChart({ data = MONTHLY_DATA }) {
-  const maxVal = Math.max(...data.map((m) => m.income));
+  const maxVal = Math.max(...data.map((m) => Math.max(m.income, m.expense)), 1);
 
   return (
-    <div style={{ display: "flex", alignItems: "flex-end", gap: 8, height: 120, padding: "0 4px" }}>
+    <div
+      style={{
+        display: "flex",
+        alignItems: "flex-end",
+        gap: 8,
+        height: 120,
+        padding: "0 4px",
+      }}
+    >
       {data.map((m, i) => (
         <div
           key={m.month}
-          style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}
+          style={{
+            flex: 1,
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            gap: 4,
+          }}
         >
           {/* Bar pair */}
           <div
@@ -29,7 +59,8 @@ export default function BarChart({ data = MONTHLY_DATA }) {
             <div
               style={{
                 width: "45%",
-                height: (m.income / maxVal) * 100,
+                height: `${(m.income / maxVal) * 100}%`,
+                minHeight: m.income > 0 ? 3 : 0,
                 background: "#4CAF50",
                 borderRadius: "3px 3px 0 0",
                 opacity: 0.85,
@@ -37,11 +68,13 @@ export default function BarChart({ data = MONTHLY_DATA }) {
                 transformOrigin: "bottom",
               }}
             />
+
             {/* Expense bar */}
             <div
               style={{
                 width: "45%",
-                height: (m.expense / maxVal) * 100,
+                height: `${(m.expense / maxVal) * 100}%`,
+                minHeight: m.expense > 0 ? 3 : 0,
                 background: "#FF5722",
                 borderRadius: "3px 3px 0 0",
                 opacity: 0.8,
@@ -52,7 +85,9 @@ export default function BarChart({ data = MONTHLY_DATA }) {
           </div>
 
           {/* Month label */}
-          <span style={{ fontSize: 10, color: "#9e9e9e", fontWeight: 500 }}>{m.month}</span>
+          <span style={{ fontSize: 10, color: "#9e9e9e", fontWeight: 500 }}>
+            {m.month}
+          </span>
         </div>
       ))}
     </div>
