@@ -4,8 +4,16 @@ import Icon from "./Icon";
 
 const fmt = (n) => new Intl.NumberFormat("fr-CM").format(Math.abs(n));
 
-export default function InOutScreen({ txList }) {
+export default function InOutScreen({ txList = [], loading = false }) {
   const [tab, setTab] = useState("expenses");
+
+  const income = txList
+    .filter((t) => t.amount > 0)
+    .reduce((a, t) => a + t.amount, 0);
+  const expense = Math.abs(
+    txList.filter((t) => t.amount < 0).reduce((a, t) => a + t.amount, 0),
+  );
+  const balance = income - expense;
 
   const filtered = txList.filter((tx) =>
     tab === "expenses" ? tx.amount < 0 : tx.amount > 0,
@@ -23,7 +31,7 @@ export default function InOutScreen({ txList }) {
       {/* Header */}
       <div
         style={{
-          background: "linear-gradient(135deg, #1a237e 0%, #1565c0 100%)",
+          background: "linear-gradient(135deg,#1a237e 0%,#1565c0 100%)",
           padding: "16px 20px 48px",
         }}
       >
@@ -31,16 +39,6 @@ export default function InOutScreen({ txList }) {
           <h2 style={{ fontSize: 18, fontWeight: 700, color: "#fff" }}>
             In & Out
           </h2>
-          <button
-            className="btn btn-ghost"
-            style={{
-              padding: 8,
-              borderRadius: 11,
-              background: "rgba(255,255,255,0.12)",
-            }}
-          >
-            <Icon name="search" size={18} color="rgba(255,255,255,0.8)" />
-          </button>
         </div>
         <p
           style={{
@@ -49,23 +47,31 @@ export default function InOutScreen({ txList }) {
             marginBottom: 4,
           }}
         >
-          Active Total Balance
+          Total Balance
         </p>
         <p
           className="font-bold"
           style={{ fontSize: 30, color: "#fff", letterSpacing: "-0.8px" }}
         >
-          FCFA 8,420,000
+          {loading ? "…" : `FCFA ${fmt(balance)}`}
         </p>
-        <div className="flex items-center gap-2 mt-2">
-          <Icon name="trending-up" size={14} color="#A5D6A7" />
-          <span style={{ fontSize: 13, color: "#A5D6A7", fontWeight: 500 }}>
-            Up by 4% from last month
-          </span>
+        <div className="flex gap-4 mt-3">
+          <div className="flex items-center gap-2">
+            <Icon name="arrow-down-left" size={14} color="#A5D6A7" />
+            <span style={{ fontSize: 13, color: "#A5D6A7", fontWeight: 500 }}>
+              {loading ? "…" : `+FCFA ${fmt(income)}`}
+            </span>
+          </div>
+          <div className="flex items-center gap-2">
+            <Icon name="arrow-up-right" size={14} color="#FFAB91" />
+            <span style={{ fontSize: 13, color: "#FFAB91", fontWeight: 500 }}>
+              {loading ? "…" : `-FCFA ${fmt(expense)}`}
+            </span>
+          </div>
         </div>
       </div>
 
-      {/* Tab Toggle (overlapping card) */}
+      {/* Tab + list */}
       <div
         style={{
           padding: "0 16px",
@@ -103,7 +109,6 @@ export default function InOutScreen({ txList }) {
           ))}
         </div>
 
-        {/* Sort row */}
         <div className="flex items-center justify-between mb-3 px-1">
           <span
             style={{
@@ -112,25 +117,28 @@ export default function InOutScreen({ txList }) {
               fontWeight: 500,
             }}
           >
-            {filtered.length} transactions
+            {loading ? "Loading…" : `${filtered.length} transactions`}
           </span>
-          <button
-            className="btn btn-ghost"
-            style={{
-              padding: "6px 10px",
-              fontSize: 12,
-              color: "var(--text-muted)",
-              gap: 4,
-            }}
-          >
-            <Icon name="filter" size={13} color="var(--text-muted)" />
-            Sort by
-          </button>
         </div>
 
-        {/* Transaction list */}
         <div className="card" style={{ padding: "4px 16px" }}>
-          {filtered.length === 0 ?
+          {loading ?
+            <div className="flex flex-col items-center py-10 gap-3">
+              <svg
+                width={24}
+                height={24}
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="var(--primary)"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                style={{ animation: "spin 0.8s linear infinite" }}
+              >
+                <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4" />
+              </svg>
+              <style>{"@keyframes spin{to{transform:rotate(360deg)}}"}</style>
+            </div>
+          : filtered.length === 0 ?
             <div className="flex flex-col items-center py-10 gap-3">
               <Icon name="receipt" size={40} color="var(--text-light)" />
               <p style={{ color: "var(--text-muted)", fontSize: 14 }}>
@@ -143,8 +151,15 @@ export default function InOutScreen({ txList }) {
                 className="tx-item anim-fade-up"
                 style={{ animationDelay: `${i * 0.04}s` }}
               >
-                <div className="tx-icon" style={{ background: tx.colorBg }}>
-                  <Icon name={tx.icon} size={18} color={tx.color} />
+                <div
+                  className="tx-icon"
+                  style={{ background: tx.bg ?? "#f5f5f5" }}
+                >
+                  <Icon
+                    name={tx.icon ?? "receipt"}
+                    size={18}
+                    color={tx.color ?? "#9e9e9e"}
+                  />
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <p
@@ -166,19 +181,18 @@ export default function InOutScreen({ txList }) {
                       marginTop: 2,
                     }}
                   >
-                    {tx.category.charAt(0).toUpperCase() + tx.category.slice(1)}{" "}
-                    · {tx.date}
+                    {tx.category} · {tx.date}
                   </p>
                 </div>
                 <p
                   style={{
                     fontSize: 14,
                     fontWeight: 700,
-                    color: tx.amount > 0 ? "var(--primary)" : "var(--alert)",
                     whiteSpace: "nowrap",
+                    color: tx.amount > 0 ? "var(--primary)" : "var(--alert)",
                   }}
                 >
-                  {tx.amount > 0 ? "+" : "-"}
+                  {tx.amount > 0 ? "+" : "−"}
                   {fmt(tx.amount)}
                 </p>
               </div>
