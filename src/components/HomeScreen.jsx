@@ -1,16 +1,19 @@
 // src/components/HomeScreen.jsx
 import { useState } from "react";
 import Icon from "./Icon";
-import {
-  balanceData,
-  spendingCategories,
-  user,
-} from "../../data/mockData";
 
 const fmt = (n) => new Intl.NumberFormat("fr-CM").format(Math.abs(n));
 
-function BalanceCard() {
+function BalanceCard({ txList }) {
   const [hidden, setHidden] = useState(false);
+
+  const income = txList
+    .filter((t) => t.amount > 0)
+    .reduce((a, t) => a + t.amount, 0);
+  const expense = Math.abs(
+    txList.filter((t) => t.amount < 0).reduce((a, t) => a + t.amount, 0),
+  );
+  const balance = income - expense;
 
   return (
     <div className="balance-card anim-fade-up">
@@ -27,10 +30,7 @@ function BalanceCard() {
               marginBottom: 2,
             }}
           >
-            Welcome back
-          </p>
-          <p style={{ fontSize: 16, fontWeight: 700, color: "#fff" }}>
-            {user.name}
+            My Finances
           </p>
         </div>
         <div className="flex gap-2" style={{ position: "relative", zIndex: 1 }}>
@@ -45,20 +45,6 @@ function BalanceCard() {
           >
             <Icon
               name={hidden ? "eye-off" : "eye"}
-              size={17}
-              color="rgba(255,255,255,0.75)"
-            />
-          </button>
-          <button
-            className="btn btn-ghost"
-            style={{
-              padding: 8,
-              borderRadius: 10,
-              background: "rgba(255,255,255,0.12)",
-            }}
-          >
-            <Icon
-              name="more-horizontal"
               size={17}
               color="rgba(255,255,255,0.75)"
             />
@@ -81,7 +67,7 @@ function BalanceCard() {
             marginBottom: 4,
           }}
         >
-          Active Total Balance
+          Total Balance
         </p>
         <p
           className="font-bold"
@@ -93,22 +79,8 @@ function BalanceCard() {
             transition: "filter 0.3s ease",
           }}
         >
-          FCFA {fmt(balanceData.total)}
+          FCFA {fmt(balance)}
         </p>
-        <div className="flex items-center gap-2 mt-2">
-          <div
-            className="category-chip"
-            style={{
-              background: "rgba(76,175,80,0.22)",
-              color: "#A5D6A7",
-              fontSize: 12,
-              padding: "4px 10px",
-            }}
-          >
-            <Icon name="trending-up" size={12} color="#A5D6A7" />
-            Up by {balanceData.changePercent}% from last month
-          </div>
-        </div>
       </div>
 
       {/* Income / Expenses row */}
@@ -116,13 +88,13 @@ function BalanceCard() {
         {[
           {
             label: "Income",
-            amount: balanceData.income,
+            amount: income,
             icon: "arrow-down-left",
             color: "#A5D6A7",
           },
           {
             label: "Expenses",
-            amount: balanceData.expenses,
+            amount: expense,
             icon: "arrow-up-right",
             color: "#FFAB91",
           },
@@ -170,102 +142,8 @@ function BalanceCard() {
   );
 }
 
-function SpendingBreakdown() {
-  return (
-    <div className="card anim-fade-up delay-2" style={{ padding: "18px 16px" }}>
-      <div className="flex items-center justify-between mb-4">
-        <h3
-          style={{ fontSize: 15, fontWeight: 700, color: "var(--text-main)" }}
-        >
-          Spending Breakdown
-        </h3>
-        <button
-          className="btn btn-ghost"
-          style={{
-            padding: "4px 8px",
-            fontSize: 12,
-            color: "var(--secondary)",
-          }}
-        >
-          This month
-          <Icon name="chevron-right" size={13} color="var(--secondary)" />
-        </button>
-      </div>
-      <div className="flex flex-col gap-4">
-        {spendingCategories.map((cat) => {
-          const pct = Math.min((cat.spent / cat.budget) * 100, 100);
-          const over = cat.overBudget;
-          return (
-            <div key={cat.id}>
-              <div className="flex items-center justify-between mb-2">
-                <div className="flex items-center gap-3">
-                  <div
-                    className="tx-icon"
-                    style={{
-                      background:
-                        over ? "var(--alert-light)" : cat.color + "18",
-                      width: 36,
-                      height: 36,
-                      borderRadius: 10,
-                    }}
-                  >
-                    <Icon
-                      name={cat.icon}
-                      size={15}
-                      color={over ? "var(--alert)" : cat.color}
-                    />
-                  </div>
-                  <div>
-                    <p
-                      style={{
-                        fontSize: 13,
-                        fontWeight: 600,
-                        color: "var(--text-main)",
-                      }}
-                    >
-                      {cat.name}
-                    </p>
-                    <p style={{ fontSize: 11, color: "var(--text-muted)" }}>
-                      {fmt(cat.spent)} / {fmt(cat.budget)}
-                    </p>
-                  </div>
-                </div>
-                {over && (
-                  <span
-                    className="category-chip"
-                    style={{
-                      background: "var(--alert-light)",
-                      color: "var(--alert)",
-                      fontSize: 10,
-                      padding: "3px 8px",
-                    }}
-                  >
-                    Over
-                  </span>
-                )}
-              </div>
-              <div className="progress-bar">
-                <div
-                  className="progress-fill"
-                  style={{
-                    "--progress-width": `${pct}%`,
-                    width: `${pct}%`,
-                    background:
-                      over ? "var(--alert)" : (
-                        `linear-gradient(90deg, ${cat.color}99, ${cat.color})`
-                      ),
-                  }}
-                />
-              </div>
-            </div>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
-
 function RecentTransactions({ txList }) {
+  const recent = txList.slice(0, 10);
   return (
     <div className="card anim-fade-up delay-3" style={{ padding: "18px 16px" }}>
       <div className="flex items-center justify-between mb-2">
@@ -274,65 +152,79 @@ function RecentTransactions({ txList }) {
         >
           Recent Transactions
         </h3>
-        <button
-          className="btn btn-ghost"
-          style={{
-            padding: "4px 8px",
-            fontSize: 12,
-            color: "var(--secondary)",
-          }}
-        >
-          See all
-          <Icon name="chevron-right" size={13} color="var(--secondary)" />
-        </button>
       </div>
-      {txList.map((tx, i) => (
-        <div
-          key={tx.id}
-          className="tx-item"
-          style={{ animationDelay: `${0.3 + i * 0.05}s` }}
-        >
-          <div className="tx-icon" style={{ background: tx.colorBg }}>
-            <Icon name={tx.icon} size={18} color={tx.color} />
-          </div>
-          <div style={{ flex: 1, minWidth: 0 }}>
+
+      {recent.length === 0 ?
+        <div className="flex flex-col items-center py-8 gap-3">
+          <Icon name="receipt" size={36} color="var(--text-light)" />
+          <p style={{ color: "var(--text-muted)", fontSize: 14 }}>
+            No transactions yet
+          </p>
+          <p
+            style={{
+              color: "var(--text-light)",
+              fontSize: 12,
+              textAlign: "center",
+            }}
+          >
+            Tap the + button below to add your first one.
+          </p>
+        </div>
+      : recent.map((tx, i) => (
+          <div
+            key={tx.id}
+            className="tx-item"
+            style={{ animationDelay: `${0.3 + i * 0.05}s` }}
+          >
+            <div className="tx-icon" style={{ background: tx.bg ?? "#f5f5f5" }}>
+              <Icon
+                name={tx.icon ?? "receipt"}
+                size={18}
+                color={tx.color ?? "#9e9e9e"}
+              />
+            </div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <p
+                style={{
+                  fontSize: 14,
+                  fontWeight: 600,
+                  color: "var(--text-main)",
+                  whiteSpace: "nowrap",
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                }}
+              >
+                {tx.name}
+              </p>
+              <p
+                style={{
+                  fontSize: 12,
+                  color: "var(--text-muted)",
+                  marginTop: 2,
+                }}
+              >
+                {tx.category} · {tx.date}
+              </p>
+            </div>
             <p
               style={{
                 fontSize: 14,
-                fontWeight: 600,
-                color: "var(--text-main)",
+                fontWeight: 700,
                 whiteSpace: "nowrap",
-                overflow: "hidden",
-                textOverflow: "ellipsis",
+                color: tx.amount > 0 ? "var(--primary)" : "var(--alert)",
               }}
             >
-              {tx.name}
-            </p>
-            <p
-              style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 2 }}
-            >
-              {tx.category.charAt(0).toUpperCase() + tx.category.slice(1)} ·{" "}
-              {tx.date}
+              {tx.amount > 0 ? "+" : "−"}
+              {fmt(tx.amount)}
             </p>
           </div>
-          <p
-            style={{
-              fontSize: 14,
-              fontWeight: 700,
-              color: tx.amount > 0 ? "var(--primary)" : "var(--alert)",
-              whiteSpace: "nowrap",
-            }}
-          >
-            {tx.amount > 0 ? "+" : "−"}
-            {fmt(tx.amount)}
-          </p>
-        </div>
-      ))}
+        ))
+      }
     </div>
   );
 }
 
-export default function HomeScreen({ txList }) {
+export default function HomeScreen({ txList = [], loading = false }) {
   return (
     <div
       className="font-inter"
@@ -342,7 +234,7 @@ export default function HomeScreen({ txList }) {
         paddingBottom: "calc(var(--nav-height) + 20px)",
       }}
     >
-      {/* App Header */}
+      {/* Header */}
       <div
         style={{
           background: "var(--surface)",
@@ -373,41 +265,46 @@ export default function HomeScreen({ txList }) {
               padding: 8,
               borderRadius: 11,
               background: "var(--bg-app)",
-              position: "relative",
             }}
           >
             <Icon name="search" size={19} color="var(--text-muted)" />
           </button>
-          <button
-            className="btn btn-ghost"
-            style={{
-              padding: 8,
-              borderRadius: 11,
-              background: "var(--bg-app)",
-              position: "relative",
-            }}
-          >
-            <Icon name="bell" size={19} color="var(--text-muted)" />
-            <span className="notif-dot" />
-          </button>
         </div>
       </div>
 
-      {/* Scrollable Content */}
-      <div
-        style={{
-          padding: "16px 16px 0",
-          maxWidth: 480,
-          margin: "0 auto",
-          display: "flex",
-          flexDirection: "column",
-          gap: 14,
-        }}
-      >
-        <BalanceCard />
-        <SpendingBreakdown />
-        <RecentTransactions txList={txList} />
-      </div>
+      {/* Loading state */}
+      {loading ?
+        <div
+          style={{ display: "flex", justifyContent: "center", paddingTop: 80 }}
+        >
+          <svg
+            width={28}
+            height={28}
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="var(--primary)"
+            strokeWidth="2.5"
+            strokeLinecap="round"
+            style={{ animation: "spin 0.8s linear infinite" }}
+          >
+            <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4" />
+          </svg>
+          <style>{"@keyframes spin{to{transform:rotate(360deg)}}"}</style>
+        </div>
+      : <div
+          style={{
+            padding: "16px 16px 0",
+            maxWidth: 480,
+            margin: "0 auto",
+            display: "flex",
+            flexDirection: "column",
+            gap: 14,
+          }}
+        >
+          <BalanceCard txList={txList} />
+          <RecentTransactions txList={txList} />
+        </div>
+      }
     </div>
   );
 }
