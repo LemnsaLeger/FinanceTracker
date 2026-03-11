@@ -10,6 +10,8 @@
 // After successful auth, calls onSuccess(lastRoute) so App.js can navigate.
 // ─────────────────────────────────────────────────────────────────────────────
 
+import { CloudCheck, CloudAlert } from "lucide-react";
+
 import { useState, useEffect, useRef } from "react";
 import { supabase } from "../../lib/supabaseClient";
 import { getLastRoute } from "../../lib/AuthContext";
@@ -380,8 +382,8 @@ export default function AuthScreen({ onSuccess }) {
           </p>
 
           {/* Error / success banners */}
-          {error   && <div style={S.error}>⚠️ {error}</div>}
-          {message && <div style={S.success}>✅ {message}</div>}
+          {error   && <div style={S.error}><CloudAlert size={16} /> {error}</div>}
+          {message && <div style={S.success}><CloudCheck size={16} /> {message}</div>}
 
           {/* ── Form ── */}
           <form onSubmit={isLogin ? handleLogin : isForgot ? handleForgot : handleSignup}>
