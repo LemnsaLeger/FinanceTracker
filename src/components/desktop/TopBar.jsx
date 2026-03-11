@@ -1,18 +1,21 @@
 // src/components/desktop/TopBar.jsx
-// Fixed top navigation bar: breadcrumb, search, notifications, avatar.
-// The hamburger button toggles sidebar collapse — state lives in DesktopLayout.
-
 import Icon from "./shared/Icon";
 import { ghostBtn } from "./shared/styles";
 
 const PAGE_LABELS = {
   dashboard: "Dashboard",
-  analytics:  "Analytics",
-  wallet:    "Wallet",
-  profile:   "Profile",
+  analytics: "Analytics",
+  wallet: "Wallet",
+  profile: "Profile",
+  notifications: "Notifications",
 };
 
-export default function TopBar({ page, onToggleSidebar }) {
+export default function TopBar({
+  page,
+  onToggleSidebar,
+  unreadCount = 0,
+  onBellClick,
+}) {
   return (
     <header
       style={{
@@ -26,20 +29,30 @@ export default function TopBar({ page, onToggleSidebar }) {
         flexShrink: 0,
       }}
     >
-      {/* ── Left: hamburger + page title ── */}
+      {/* Left */}
       <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-        <button onClick={onToggleSidebar} style={ghostBtn} title="Toggle sidebar">
+        <button
+          onClick={onToggleSidebar}
+          style={ghostBtn}
+          title="Toggle sidebar"
+        >
           <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
             {[0, 1, 2].map((i) => (
-              <div key={i} style={{ width: 18, height: 2, background: "#9e9e9e", borderRadius: 2 }} />
+              <div
+                key={i}
+                style={{
+                  width: 18,
+                  height: 2,
+                  background: "#9e9e9e",
+                  borderRadius: 2,
+                }}
+              />
             ))}
           </div>
         </button>
-
         <h1 style={{ fontSize: 18, fontWeight: 700, color: "#212121" }}>
           {PAGE_LABELS[page] ?? page}
         </h1>
-
         <span
           style={{
             fontSize: 12,
@@ -49,13 +62,16 @@ export default function TopBar({ page, onToggleSidebar }) {
             borderRadius: 100,
           }}
         >
-          March 2026
+          {new Date().toLocaleString("en-GB", {
+            month: "long",
+            year: "numeric",
+          })}
         </span>
       </div>
 
-      {/* ── Right: search, bell, avatar ── */}
+      {/* Right */}
       <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-        {/* Search bar */}
+        {/* Search */}
         <div
           style={{
             display: "flex",
@@ -92,8 +108,9 @@ export default function TopBar({ page, onToggleSidebar }) {
           </kbd>
         </div>
 
-        {/* Notification bell */}
+        {/* Bell with live badge */}
         <button
+          onClick={onBellClick}
           style={{
             ...ghostBtn,
             position: "relative",
@@ -104,19 +121,39 @@ export default function TopBar({ page, onToggleSidebar }) {
           }}
           title="Notifications"
         >
-          <Icon name="bell" size={17} color="#757575" />
-          <div
-            style={{
-              position: "absolute",
-              top: 7,
-              right: 7,
-              width: 7,
-              height: 7,
-              borderRadius: "50%",
-              background: "#FF5722",
-              border: "2px solid #fff",
-            }}
+          <Icon
+            name="bell"
+            size={17}
+            color={unreadCount > 0 ? "#FF5722" : "#757575"}
           />
+          {unreadCount > 0 && (
+            <div
+              style={{
+                position: "absolute",
+                top: 6,
+                right: 6,
+                minWidth: 16,
+                height: 16,
+                borderRadius: 100,
+                background: "#FF5722",
+                border: "2px solid #fff",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <span
+                style={{
+                  fontSize: 9,
+                  color: "#fff",
+                  fontWeight: 800,
+                  lineHeight: 1,
+                }}
+              >
+                {unreadCount > 9 ? "9+" : unreadCount}
+              </span>
+            </div>
+          )}
         </button>
 
         {/* Avatar */}
@@ -125,15 +162,16 @@ export default function TopBar({ page, onToggleSidebar }) {
             width: 36,
             height: 36,
             borderRadius: 11,
+            cursor: "pointer",
             background: "linear-gradient(135deg,#1565C0,#0277BD)",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            cursor: "pointer",
           }}
-          title="Darby Vallendito"
         >
-          <span style={{ fontSize: 13, color: "#fff", fontWeight: 700 }}>DV</span>
+          <span style={{ fontSize: 13, color: "#fff", fontWeight: 700 }}>
+            DV
+          </span>
         </div>
       </div>
     </header>
